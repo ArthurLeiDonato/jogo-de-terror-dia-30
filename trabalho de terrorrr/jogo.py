@@ -127,7 +127,12 @@ img_bg_iluminada = carregar_imagem("WhatsApp Image 2026-10-29 at 18.38.54.jpeg",
 
 # --- CARREGAR FRAMES DA ANIMAÇÃO DO SUSTO ---
 frames_susto = []
-for nome_arq in ["susto_1.png", "susto_2.png"]:
+arquivos_susto = [
+    "WhatsApp Image 2026-10-30 at 13.35.22.jpeg",
+    "WhatsApp Image 2026-10-29 at 22.04.08.jpeg"
+]
+
+for nome_arq in arquivos_susto:
     if os.path.exists(nome_arq):
         try:
             img_f = pygame.image.load(nome_arq).convert_alpha()
@@ -135,7 +140,6 @@ for nome_arq in ["susto_1.png", "susto_2.png"]:
         except pygame.error:
             pass
 
-# Caso não encontre os frames separados mas tenha uma imagem única guardada:
 if not frames_susto and os.path.exists("flavio.png"):
     try:
         img_unico = pygame.image.load("flavio.png").convert_alpha()
@@ -174,6 +178,7 @@ indice_horario_atual = 0
 
 # --- BOTÕES DE INTERFACE ---
 btn_voltar_hub = ObjetoGrafico(55, 415, 140, 35, (180, 90, 90), "<- Voltar ao Hall")
+btn_botao_saida = ObjetoGrafico(350, 230, 90, 35, VERMELHO_SANGUE, "saida")
 
 # Botões de Zoom do Relógio
 btn_voltar_zoom = ObjetoGrafico(50, 420, 100, 35, (180, 90, 90), "<- Voltar")
@@ -261,21 +266,22 @@ while True:
                         sala_atual = "sala_principal"
                         mensagem_status = "Você voltou ao Hall Principal."
 
-                # --- SALA DA PORTA DE FUGA (SAÍDA COM PLOT TWIST) ---
+                # --- SALA DA PORTA DE FUGA (BOTÃO "saida") ---
                 elif sala_atual == "sala_fuga":
                     if btn_voltar_hub.foi_clicado(pos):
                         sala_atual = "sala_principal"
                         mensagem_status = "Você voltou ao Hall Principal."
                     
-                    elif pos[0] >= 420 and pos[0] <= 580 and pos[1] >= 250 and pos[1] <= 420:
+                    elif btn_botao_saida.foi_clicado(pos):
                         if "Código do Cofre" in inventario and "Chave da Saída" in inventario:
+                            sala_atual = "vitoria"
+                            mensagem_status = "Você usou os itens corretos e escapou!"
+                        else:
                             disparar_susto()
                             sala_atual = "sala_principal"
                             inventario.clear() 
                             cofre_aberto = False
-                            mensagem_status = "Era tudo uma ilusão... O monstro te pegou antes da saída!"
-                        else:
-                            mensagem_status = "A porta exige o Código do Cofre e a Chave da Saída para abrir!"
+                            mensagem_status = "Você tentou sair, tomou um susto e voltou ao início!"
 
                 # --- SALA DO RELÓGIO ---
                 elif sala_atual == "sala_relogio":
@@ -383,9 +389,10 @@ while True:
         else:
             pygame.draw.rect(tela, (30, 30, 30), viewport_rect)
         pygame.draw.rect(tela, COR_CONTORNO, viewport_rect, 4)
-        titulo = fonte_grande.render("Porta de Fuga", True, BRANCO)
+        titulo = fonte_grande.render("Sala de Fuga", True, BRANCO)
         tela.blit(titulo, (65, 30))
         btn_voltar_hub.desenhar(tela)
+        btn_botao_saida.desenhar(tela)
 
     elif sala_atual in ["sala_relogio", "sala_mesa", "sala_cofre"]:
         if sala_atual == "sala_relogio":
@@ -455,7 +462,6 @@ while True:
     if susto_ativo:
         tela.fill((40, 0, 0))
         if frames_susto:
-            # Alterna entre os frames rapidamente com base no tempo para criar a animação do vídeo
             indice_frame = (tempo_atual // 150) % len(frames_susto)
             img_atual = frames_susto[indice_frame]
             pos_x = (LARGURA - img_atual.get_width()) // 2
